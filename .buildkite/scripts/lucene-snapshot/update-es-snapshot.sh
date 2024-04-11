@@ -7,6 +7,11 @@ if [[ "$BUILDKITE_BRANCH" != "lucene_snapshot" ]]; then
   exit 1
 fi
 
+# This is a workaround. The ephemeral Github token (VAULT_GITHUB_TOKEN) used in the pipeline has write access, but is not able to bypass branch protections.
+# We may be able to add an exception for the github app `Elastic Vault Github Plugin Prod` to release-tools/build-logic/src/main/java/org/elasticsearch/release/tools/GitHubApi.java:216 instead
+VAULT_GITHUB_TOKEN="$GITHUB_TOKEN"
+export VAULT_GITHUB_TOKEN
+
 echo --- Update Lucene snapshot in Elasticsearch
 
 LUCENE_SNAPSHOT_VERSION=${LUCENE_SNAPSHOT_VERSION:-}
@@ -46,6 +51,7 @@ else
   git add gradle/verification-metadata.xml
   git add docs/Versions.asciidoc
 
+  VAULT_GITHUB_TOKEN="$GITHUB_TOKEN"
   git commit -m "[Automated] Update Lucene snapshot to $LUCENE_SNAPSHOT_VERSION"
   git push origin "$BUILDKITE_BRANCH"
 fi
